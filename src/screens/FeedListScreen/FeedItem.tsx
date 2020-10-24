@@ -3,35 +3,34 @@ import { Feed, ReduxState, User } from 'types/types';
 import dayjs from 'dayjs';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import ZoomImage from 'components/ZoomImage';
-import { getImageUrl, getUserAvatar } from 'utils/constants';
+import { getImageUrl, getUserAvatar, screenWidth } from 'utils/constants';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { connect } from 'react-redux';
 import { selectDataState } from 'reduxState/selectors';
 import { post } from 'utils/request';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 
-interface OwnProps {
+interface Props {
   item: Feed;
-}
-export interface MappedStateProps {
   user: User;
 }
-export interface MappedDispatchProps {}
-export type Props = MappedStateProps & MappedDispatchProps & OwnProps;
+
 function FeedItem({ item, user }: Props) {
   const { images, createdAt, desc, user: author } = item;
   const fromNow = dayjs(createdAt).fromNow();
 
-  const [feedLikes, setFeedLikes] = React.useState(item.feedLikes?.map(({ userId }) => userId) || []);
+  const [feedLikes, setFeedLikes] = React.useState(
+    item.feedLikes?.map(({ userId }) => userId) || [],
+  );
   const likedByMe = feedLikes.includes(user.id);
   async function likeFeed(feedId: string) {
-    const { ok } = await post(`/feedlike`, {
+    const { ok } = await post('/feedlike', {
       feedId,
       action: likedByMe ? 'unlike' : 'like',
     });
     if (ok) {
       if (likedByMe) {
-        setFeedLikes(feedLikes.filter(userId => userId != user.id));
+        setFeedLikes(feedLikes.filter((userId) => userId != user.id));
       } else {
         setFeedLikes(feedLikes.concat(user.id));
       }
@@ -40,17 +39,24 @@ function FeedItem({ item, user }: Props) {
   return (
     <View style={styles.container}>
       <Image style={styles.authorAvatar} source={getUserAvatar(author)} />
-      <View>
+      <View style={styles.content}>
         <Text style={styles.authorName}>{author.username}</Text>
         {!!desc && <Text style={styles.desc}>{desc}</Text>}
         <View style={styles.imagesContainer}>
           {images?.map((imageUri, i) => (
-            <ZoomImage key={i} source={{ uri: getImageUrl(imageUri) }} style={styles.image} />
+            <ZoomImage
+              key={i}
+              source={{ uri: getImageUrl(imageUri) }}
+              style={styles.image}
+            />
           ))}
         </View>
         <View style={styles.metaTextContainer}>
           <Text style={styles.metaText}>{fromNow}</Text>
-          <TouchableOpacity style={styles.likeButton} onPress={() => likeFeed(item.id)}>
+          <TouchableOpacity
+            style={styles.likeButton}
+            onPress={() => likeFeed(item.id)}
+          >
             <Icon
               style={[styles.likeIcon, likedByMe && styles.activeLikeIcon]}
               name={likedByMe ? 'heart' : 'heart-o'}
@@ -63,36 +69,40 @@ function FeedItem({ item, user }: Props) {
   );
 }
 
+const imageWidth = (screenWidth - 85) / 3;
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
     flexDirection: 'row',
-    margin: 15,
+    paddingHorizontal: 10,
+    marginVertical: 15,
+  },
+  content: {
+    flex: 1,
   },
   author: {
     flexDirection: 'row',
     marginBottom: 10,
   },
   authorAvatar: {
-    width: 45,
-    height: 45,
-    marginRight: 16,
+    width: 32,
+    height: 32,
+    marginRight: 10,
   },
   authorName: {
     fontSize: 16,
-    marginBottom: 10,
+    marginBottom: 6,
     color: '#0645AD',
   },
   imagesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    width: 300,
   },
   image: {
-    width: 90,
-    height: 90,
-    marginRight: 10,
-    marginBottom: 10,
+    width: imageWidth,
+    height: imageWidth,
+    marginRight: 5,
+    marginBottom: 5,
     resizeMode: 'cover',
   },
   desc: {
@@ -102,6 +112,7 @@ const styles = StyleSheet.create({
   metaTextContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 10,
   },
   metaText: {
     fontSize: 13,

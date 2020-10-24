@@ -19,7 +19,10 @@ async function request(
   const additionalHeader = (options.method === 'POST' ||
     options.method === 'PUT') && {
     Accept: 'application/json',
-    'Content-Type': options.body instanceof FormData ? 'multipart/form-data' : 'application/json',
+    'Content-Type':
+      options.body instanceof FormData
+        ? 'multipart/form-data'
+        : 'application/json',
   };
   const resp = await Promise.race<Response | undefined>([
     fetch(apiEndpoint + url, {
@@ -31,7 +34,7 @@ async function request(
       },
     }).catch(e => undefined),
     new Promise<undefined>(resolve =>
-      setTimeout(resolve, options.timeout || 10000),
+      setTimeout(resolve, options.timeout || 30000),
     ),
   ]);
   if (resp) {
